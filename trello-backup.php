@@ -164,6 +164,27 @@ foreach ($boards as $id => $board) {
     }
 
 }
+
+// 6) Compress the backup
+if ($compress)
+{
+    try
+    {
+        $tarfile = "$path.tar";
+
+        $phar = new PharData($tarfile);
+        $phar->buildFromIterator(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path)), __DIR__);
+        $phar->compress(Phar::GZ);
+
+        del_tree($path);
+        unlink($tarfile);
+    } 
+    catch (Exception $e) 
+    {
+        echo $e;
+    }
+}
+
 echo "your Trello boards are now safely downloaded!\n";
 
 /**
@@ -211,3 +232,13 @@ function create_backup_dir($dirname)
 		die("Error creating backup dir - directory $dirname is not writeable\n");
 	}
 }
+
+function del_tree($dir)
+{
+  $files = array_diff(scandir($dir), array('.','..'));
+  foreach ($files as $file) {
+    (is_dir("$dir/$file")) ? del_tree("$dir/$file") : unlink("$dir/$file");
+  }
+  return rmdir($dir);
+}
+
